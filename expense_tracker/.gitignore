@@ -1,0 +1,52 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+**/__pycache__/
+*.pyo
+
+# Virtual environment
+venv/
+env/
+.env/
+.venv/
+ENV/
+
+# Django-specific
+*.sqlite3
+db.sqlite3
+*/migrations/*
+!*/migrations/
+!*/migrations/__init__.py
+
+# Media and Static files
+media/*
+!media/.gitkeep
+media/post_images/*
+!media/post_images/.gitkeep
+media/qr_codes/*
+!media/qr_codes/.gitkeep
+staticfiles/
+media/poll_banner/*
+!media/poll_banner/.gitkeep
+static/collected/
+*.log
+
+# Environment variables
+.env
+**/.env
+.env.local
+.env.*.local
+
+# IDE specific
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Temporary files
+*.bak
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+*~
