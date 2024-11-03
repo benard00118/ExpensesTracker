@@ -1,0 +1,95 @@
+# project structure
+expense_tracker/
+    ├── manage.py
+    ├── expense_tracker/          # project directory
+    │   ├── __init__.py
+    │   ├── settings.py
+    │   ├── urls.py
+    │   └── wsgi.py
+    ├── core/                    # core app
+    │   ├── __init__.py
+    │   ├── models.py
+    │   ├── views.py
+    │   ├── urls.py
+    │   ├── admin.py
+    │   ├── forms.py
+    │   └── tests.py
+    ├── templates/              # templates directory
+    │   ├── base.html
+    │   └── core/
+    │       ├── dashboard.html
+    │       ├── transactions.html
+    │       └── reports.html
+    └── static/                # static files
+        ├── css/
+        ├── js/
+        └── img/
+
+
+
+
+templates/
+    core/
+        dashboard.html
+        transaction_list.html
+        transaction_form.html
+        account_summary.html
+        category_analysis.html
+        # ... (other templates)
+
+
+dashboard View:
+
+Shows financial overview
+Calculates total balance across all accounts
+Displays monthly income and expenses
+Shows expense distribution by category
+Presents 6-month trend
+Lists recent transactions
+Shows budget progress
+
+
+transaction_list View:
+
+Lists all transactions
+Implements filtering by:
+
+Category
+Account
+Date range
+
+
+
+
+add_transaction View:
+
+Handles new transaction creation
+Validates form data
+Associates transaction with user
+
+
+budget_list View:
+
+Shows all budgets
+Handles budget creation
+Tracks budget progress
+
+
+goal_list View:
+
+Manages financial goals
+Handles goal creation and tracking
+
+
+account_summary View:
+
+Shows detailed account information
+Lists recent transactions
+Shows monthly statistics
+
+
+category_analysis View:
+
+Analyzes spending by category
+Shows monthly trends
+Compares against budget
