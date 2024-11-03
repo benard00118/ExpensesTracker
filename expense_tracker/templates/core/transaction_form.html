@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Transaction | Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <!-- Page Header -->
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold text-gray-900">
+                {% if form.instance.pk %}Edit{% else %}Add{% endif %} Transaction
+            </h1>
+            <p class="mt-1 text-sm text-gray-600">
+                Enter the details of your transaction below
+            </p>
+        </div>
+
+        <!-- Transaction Form -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="rounded-md bg-red-50 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">
+                                Please correct the errors below
+                            </h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                {{ form.non_field_errors }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="grid grid-cols-1 gap-6">
+                    <!-- Date Field -->
+                    <div>
+                        <label for="{{ form.date.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Date
+                        </label>
+                        <div class="mt-1">
+                            {{ form.date }}
+                        </div>
+                        {% if form.date.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.date.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Description Field -->
+                    <div>
+                        <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Description
+                        </label>
+                        <div class="mt-1">
+                            {{ form.description }}
+                        </div>
+                        {% if form.description.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.description.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Amount Field -->
+                    <div>
+                        <label for="{{ form.amount.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Amount
+                        </label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">$</span>
+                            </div>
+                            {{ form.amount }}
+                        </div>
+                        {% if form.amount.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.amount.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Transaction Type Field -->
+                    <div>
+                        <label for="{{ form.transaction_type.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Transaction Type
+                        </label>
+                        <div class="mt-1">
+                            {{ form.transaction_type }}
+                        </div>
+                        {% if form.transaction_type.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.transaction_type.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Category Field -->
+                    <div>
+                        <label for="{{ form.category.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Category
+                        </label>
+                        <div class="mt-1">
+                            {{ form.category }}
+                        </div>
+                        {% if form.category.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.category.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Account Field -->
+                    <div>
+                        <label for="{{ form.account.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Account
+                        </label>
+                        <div class="mt-1">
+                            {{ form.account }}
+                        </div>
+                        {% if form.account.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.account.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Notes Field -->
+                    <div>
+                        <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Notes (Optional)
+                        </label>
+                        <div class="mt-1">
+                            {{ form.notes }}
+                        </div>
+                        {% if form.notes.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.notes.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-3 pt-6">
+                    <a href="{% url 'core:transaction_list' %}" 
+                       class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </a>
+                    <button type="submit" 
+                            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        {% if form.instance.pk %}Update{% else %}Create{% endif %} Transaction
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
