@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - ExpenseTracker{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Total Balance -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="flex items-center justify-between">
+                <h3 class="text-gray-500 text-sm font-medium">Total Balance</h3>
+                <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">All Accounts</span>
+            </div>
+            <div class="mt-2">
+                <p class="text-3xl font-bold text-gray-900">${{ total_balance|floatformat:2 }}</p>
+            </div>
+        </div>
+
+        <!-- Monthly Income -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="flex items-center justify-between">
+                <h3 class="text-gray-500 text-sm font-medium">Monthly Income</h3>
+                <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">This Month</span>
+            </div>
+            <div class="mt-2">
+                <p class="text-3xl font-bold text-gray-900">${{ monthly_income|floatformat:2 }}</p>
+            </div>
+        </div>
+
+        <!-- Monthly Expenses -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="flex items-center justify-between">
+                <h3 class="text-gray-500 text-sm font-medium">Monthly Expenses</h3>
+                <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">This Month</span>
+            </div>
+            <div class="mt-2">
+                <p class="text-3xl font-bold text-gray-900">${{ monthly_expenses|floatformat:2 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Monthly Trend Chart -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Monthly Trend</h3>
+            <canvas id="monthlyTrendChart" height="300"></canvas>
+        </div>
+
+        <!-- Expense by Category Chart -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Expenses by Category</h3>
+            <canvas id="categoryChart" height="300"></canvas>
+        </div>
+    </div>
+
+    <!-- Budget Progress -->
+    <div class="bg-white rounded-lg shadow-sm p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Budget Progress</h3>
+        <div class="space-y-4">
+            {% for budget in active_budgets %}
+            <div>
+                <div class="flex justify-between mb-1">
+                    <span class="text-sm font-medium text-gray-700">{{ budget.category.name }}</span>
+                    <span class="text-sm font-medium text-gray-700">${{ budget.remaining|floatformat:2 }} remaining</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ budget.progress }}%"></div>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-gray-500 text-center py-4">No active budgets found.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="bg-white rounded-lg shadow-sm p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Recent Transactions</h3>
+            <a href="{% url 'core:transaction_list' %}" class="text-blue-600 hover:text-blue-800 text-sm">View All</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for transaction in recent_transactions %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ transaction.date|date:"M d, Y" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ transaction.description }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ transaction.category.name }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium {% if transaction.transaction_type == 'EXPENSE' %}text-red-600{% else %}text-green-600{% endif %}">
+                            {% if transaction.transaction_type == 'EXPENSE' %}-{% endif %}${{ transaction.amount|floatformat:2 }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-center text-gray-500">No recent transactions found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Monthly Trend Chart
+    const monthlyTrendCtx = document.getElementById('monthlyTrendChart').getContext('2d');
+    new Chart(monthlyTrendCtx, {
+        type: 'line',
+        data: {
+            labels: {{ monthly_trend|safe }}.map(item => {
+                const date = new Date(2024, item.date__month - 1);
+                return date.toLocaleString('default', { month: 'short' });
+            }),
+            datasets: [{
+                label: 'Income',
+                data: {{ monthly_trend|safe }}.map(item => item.income || 0),
+                borderColor: 'rgb(34, 197, 94)',
+                tension: 0.1
+            }, {
+                label: 'Expenses',
+                data: {{ monthly_trend|safe }}.map(item => item.expenses || 0),
+                borderColor: 'rgb(239, 68, 68)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Category Chart
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ expense_by_category|safe }}.map(item => item.category__name),
+            datasets: [{
+                data: {{ expense_by_category|safe }}.map(item => item.total),
+                backgroundColor: [
+                    '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#6366F1',
+                    '#EC4899', '#8B5CF6', '#14B8A6', '#F97316', '#06B6D4'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
