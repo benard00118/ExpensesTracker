@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Transactions | Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">Transactions</h1>
+        <a href="{% url 'core:add_transaction' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Add Transaction
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="space-y-1">
+                <label class="text-sm font-medium text-gray-700">Category</label>
+                <select name="category" class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if request.GET.category|add:"0" == category.id %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-sm font-medium text-gray-700">Account</label>
+                <select name="account" class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">All Accounts</option>
+                    {% for account in accounts %}
+                    <option value="{{ account.id }}" {% if request.GET.account|add:"0" == account.id %}selected{% endif %}>
+                        {{ account.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-sm font-medium text-gray-700">From Date</label>
+                <input type="date" name="date_from" value="{{ request.GET.date_from }}" 
+                       class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-sm font-medium text-gray-700">To Date</label>
+                <input type="date" name="date_to" value="{{ request.GET.date_to }}"
+                       class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+
+            <div class="md:col-span-4 flex justify-end">
+                <button type="submit" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
+                    Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for transaction in transactions %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {{ transaction.date|date:"M d, Y" }}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900">
+                        {{ transaction.description }}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                            {% if transaction.transaction_type == 'EXPENSE' %}bg-red-100 text-red-800
+                            {% else %}bg-green-100 text-green-800{% endif %}">
+                            {{ transaction.category.name }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900">
+                        {{ transaction.account.name }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right 
+                        {% if transaction.transaction_type == 'EXPENSE' %}text-red-600{% else %}text-green-600{% endif %}">
+                        {{ transaction.amount|floatformat:2 }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <a href="{% url 'core:edit_transaction' transaction.pk %}" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
+                        <a href="{% url 'core:delete_transaction' transaction.pk %}" 
+                           class="text-red-600 hover:text-red-900"
+                           onclick="return confirm('Are you sure you want to delete this transaction?')">
+                            Delete
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                        No transactions found
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
