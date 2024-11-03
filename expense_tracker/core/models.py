@@ -5,12 +5,33 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 
+# class User(AbstractUser):
+#     """Extended User model"""
+#     
+#     
+# In your core/models.py file or wherever core.User is defined
+from django.contrib.auth.models import AbstractUser
+
 class User(AbstractUser):
-    """Extended User model"""
+    # Ensure unique related_name values to avoid conflicts with auth.User
     currency = models.CharField(max_length=3, default='USD')
-    language = models.CharField(max_length=2, default='en')
-    theme = models.CharField(max_length=10, default='light')
     notifications_enabled = models.BooleanField(default=True)
+    theme = models.CharField(max_length=10, default='light')
+    language = models.CharField(max_length=2, default='en')
+    groups = models.ManyToManyField(
+        'auth.Group',
+        related_name='custom_user_groups',  # Change this related_name
+        blank=True,
+        help_text='The groups this user belongs to.',
+        verbose_name='groups'
+    )
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        related_name='custom_user_permissions',  # Change this related_name
+        blank=True,
+        help_text='Specific permissions for this user.',
+        verbose_name='user permissions'
+    )
 
 class Account(models.Model):
     """Bank accounts, cash, credit cards etc."""
@@ -41,29 +62,23 @@ class Account(models.Model):
         return f"{self.name} ({self.get_account_type_display()})"
 
 class Category(models.Model):
-    """Transaction categories"""
-    CATEGORY_TYPES = [
-        ('EXPENSE', 'Expense'),
-        ('INCOME', 'Income'),
-    ]
-
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    """Expense or income category."""
     name = models.CharField(max_length=100)
-    category_type = models.CharField(max_length=20, choices=CATEGORY_TYPES)
-    icon = models.CharField(max_length=50, null=True, blank=True)
-    color = models.CharField(max_length=7, null=True, blank=True)
-    budget = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
-    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL)
-    is_archived = models.BooleanField(default=False)
+    description = models.TextField(blank=True, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    
+    # Additional fields
+    parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='subcategories')
+    color = models.CharField(max_length=7, null=True, blank=True)  # e.g., Hex color code
+    category_type = models.CharField(max_length=50, null=True, blank=True)  # Optional for categorization type
+    icon = models.CharField(max_length=50, null=True, blank=True)  # Optional for storing an icon name
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        verbose_name_plural = 'Categories'
-        ordering = ['name']
-
     def __str__(self):
         return self.name
+
 
 class Transaction(models.Model):
     """Financial transactions"""
@@ -148,7 +163,13 @@ class Budget(models.Model):
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+    category = models.ForeignKey(
+        Category, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='budget_items'  # Changed to avoid clashes
+    )
     name = models.CharField(max_length=100)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     period = models.CharField(max_length=20, choices=PERIOD_CHOICES)
@@ -157,6 +178,7 @@ class Budget(models.Model):
     rollover = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
 
 class Goal(models.Model):
     """Financial goals"""
@@ -180,6 +202,7 @@ class Goal(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
+    description = models.CharField(max_length=100)
     target_amount = models.DecimalField(max_digits=15, decimal_places=2)
     current_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     deadline = models.DateField(null=True, blank=True)
